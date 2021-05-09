@@ -53,6 +53,9 @@ export default `
 .${watermark}-buttons button.${watermark}-ligo:hover {
     background-color: var(--ligo-blue);
 }
+.${watermark}-buttons button#${watermark}-michelson-button {
+    display: none;
+}
 
 #${watermark}-editor-wrapper {
     position: relative;
@@ -131,11 +134,66 @@ export default `
 }
 
 #${watermark}-compile-error {
-    padding: 20px;
-    color: #f87171;
-    background-color: #fef2f2;
+    padding: 20px;    
     width: calc(100% - var(--line-numbers-width) * 2);
+    height: 60px;
     overflow: auto;
     margin: 0px 30px;
+    background: transparent;
+    white-space: break-spaces;
+    text-align: left;
 }
+#${watermark}-compile-error.active {
+    background-color: #fef2f2;
+    color: #f76565;
+}
+
+.lds-hourglass {
+    display: inline-block;
+    position: absolute;
+    top: 0px;
+    right: 20px;
+    width: 30px;
+    height: 30px;
+  }
+  .lds-hourglass:after {
+    content: " ";
+    display: block;
+    border-radius: 50%;
+    width: 0;
+    height: 0;
+    margin: 8px;
+    box-sizing: border-box;
+    border: 16px solid #fff;
+    border-color: #fff transparent #fff transparent;
+    animation: lds-hourglass 1.2s infinite;
+  }
+  @keyframes lds-hourglass {
+    0% {
+      transform: rotate(0);
+      animation-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+    }
+    50% {
+      transform: rotate(900deg);
+      animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+    }
+    100% {
+      transform: rotate(1800deg);
+    }
+  }
+
+.slide-in-right {
+    animation: slide-in-right 0.5s cubic-bezier(0.445, 0.05, 0.55, 0.95) both;
+}
+
+@keyframes slide-in-right {
+    0% {
+      transform: translateX(1000px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
 `;

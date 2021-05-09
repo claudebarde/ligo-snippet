@@ -31,7 +31,8 @@ export default (containerId: string, containerClass?: string) => {
     syntaxButton("CameLigo"),
     syntaxButton("PascaLigo"),
     syntaxButton("ReasonLigo"),
-    syntaxButton("JsLigo")
+    syntaxButton("JsLigo"),
+    syntaxButton("Michelson")
   );
   const buttonsRight = document.createElement("div");
   const runButton = document.createElement("button");

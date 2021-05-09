@@ -60,26 +60,29 @@ export default class LigoSnippet {
   currentFlavour: LigoFlavour;
   editorParams: EditorParams;
   michelson: string;
-  compileError: string;
+  activeError: { status: boolean; msg: string; line: number };
   CONFIG_REGEX = /\(\*_\*([^]*?)\*_\*\)\s*/;
 
   constructor(
     _containerId: string,
-    initialCode?: string,
+    initialCode?: Omit<SnippetData, "theme" | "height">,
     containerClass?: string
   ) {
     // sets up the ligo snippet container
     this.containerId = _containerId;
     this.numberOfLines = 0;
-    this.currentFlavour = "cameligo";
-    this.currentCode = initialCode ? initialCode : "";
+    this.currentFlavour = initialCode ? initialCode.language : "cameligo";
+    this.currentCode = initialCode
+      ? initialCode.code.trim()
+      : cameligoCode.replace(this.CONFIG_REGEX, "").trim();
     this.editorParams = this.parseEditorConfigs({
       language: this.currentFlavour,
       code: this.currentCode.trim(),
-      name: this.currentFlavour + " contract",
+      name: initialCode ? initialCode.name : this.currentFlavour + " contract",
       theme: "light",
       height: ""
     });
+    this.activeError = { status: false, msg: "", line: 0 };
     // adds ligo syntax support
     Prism.languages = this.addLigoFlavours(Prism.languages);
     setupContainer(this.containerId, containerClass);
@@ -106,6 +109,11 @@ export default class LigoSnippet {
     document
       .getElementById(`${config.watermark}-run-button`)
       .addEventListener("click", this.compileCode);
+    // adds code into the textarea input
+    this.editorInputElement.value = this.currentCode;
+    const event = document.createEvent("Event");
+    event.initEvent("input", true, true);
+    this.editorInputElement.dispatchEvent(event);
   }
 
   /*
@@ -115,7 +123,25 @@ export default class LigoSnippet {
     const flavour = (event.target as HTMLButtonElement).getAttribute(
       "data-value"
     ) as LigoFlavour;
-    this.currentFlavour = flavour;
+    if (this.currentFlavour === "michelson") {
+      // user switches from Michelson to Ligo
+      // sets the new flavour
+      this.currentFlavour = flavour;
+      // updates code
+      this.editorInputElement.value = this.currentCode;
+      const editorInput = document.createEvent("Event");
+      editorInput.initEvent("input", true, true);
+      this.editorInputElement.dispatchEvent(editorInput);
+    } else if (flavour === "michelson") {
+      // user switches from Ligo to Michelson
+      // sets the new flavour
+      this.currentFlavour = flavour;
+      // updates code
+      this.editorInputElement.value = this.michelson;
+      const editorInput = document.createEvent("Event");
+      editorInput.initEvent("input", true, true);
+      this.editorInputElement.dispatchEvent(editorInput);
+    }
     [...document.getElementsByClassName("flavour-button")].forEach(button => {
       button.classList.remove("selected");
     });
@@ -133,8 +159,20 @@ export default class LigoSnippet {
     // renders code
     // uses <br> because Prism doesn't keep last empty line
     this.editorRendererElement.innerHTML = this.highlight(code) + "<br />";
-    this.editorParams.editor.code = code;
-    this.currentCode = code;
+
+    if (this.currentFlavour !== "michelson") {
+      if (this.michelson && this.editorParams.editor.code !== code) {
+        // hides Michelson button
+        const michelsonButton = document.getElementById(
+          `${config.watermark}-michelson-button`
+        );
+        michelsonButton.classList.remove("slide-in-right");
+        michelsonButton.style.display = "none";
+        this.michelson = "";
+      }
+      this.editorParams.editor.code = code;
+      this.currentCode = code;
+    }
   };
 
   /*
@@ -147,6 +185,14 @@ export default class LigoSnippet {
       const newLine = document.createElement("div");
       newLine.id = `${config.watermark}-line-number-${i}`;
       newLine.innerText = i.toString();
+      if (
+        this.activeError.status &&
+        this.activeError.line &&
+        this.activeError.line === i
+      ) {
+        newLine.style.color = "#f76565";
+        newLine.style.fontWeight = "bold";
+      }
       this.lineNumbersColumn.appendChild(newLine);
     }
   };
@@ -205,10 +251,14 @@ export default class LigoSnippet {
           ["Accept", "application/json"]
         ]
       });
-      const { hash } = await response.json();
-      window.open(`${webIdeUrl}/p/${hash}`, "_blank");
+      if (response) {
+        const { hash } = await response.json();
+        window.open(`${webIdeUrl}/p/${hash}`, "_blank");
+      } else {
+        throw "No hash was received";
+      }
     } catch (error) {
-      console.log(error);
+      this.handleErrors(error);
     }
   };
 
@@ -216,7 +266,16 @@ export default class LigoSnippet {
    * Compiles the input code
    */
   compileCode = async () => {
+    this.showErrorContainer(false);
+    const runButton = document.getElementById(`${config.watermark}-run-button`);
     try {
+      // adds loader
+      const loader = document.createElement("div");
+      loader.classList.add("lds-hourglass");
+      runButton.innerHTML =
+        "Running &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+      runButton.appendChild(loader);
+      // sends request
       const entrypoint = "main",
         syntax = this.editorParams.editor.language,
         code = this.editorParams.editor.code;
@@ -239,16 +298,26 @@ export default class LigoSnippet {
 
       if (response.status === 200) {
         const data = await response.json();
-        console.log(data);
         if (data.hasOwnProperty("result")) {
+          // saves the Michelson code
           this.michelson = data.result;
+          // displays the Michelson button
+          const michelsonButton = document.getElementById(
+            `${config.watermark}-michelson-button`
+          );
+          michelsonButton.classList.add("slide-in-right");
+          michelsonButton.style.display = "inline-block";
+          // triggers click on button
+          const buttonClick = document.createEvent("Event");
+          buttonClick.initEvent("click", true, true);
+          michelsonButton.dispatchEvent(buttonClick);
         } else {
           throw "No result property";
         }
       } else if (response.status === 400) {
         const data = await response.json();
         if (data.hasOwnProperty("error")) {
-          this.compileError = data.error;
+          this.handleErrors(data.error);
         } else {
           throw "No error property";
         }
@@ -256,7 +325,10 @@ export default class LigoSnippet {
         throw response;
       }
     } catch (error) {
-      console.error(error);
+      this.handleErrors(error);
+    } finally {
+      runButton.innerHTML = "";
+      runButton.innerText = "Run";
     }
   };
 
@@ -368,6 +440,46 @@ export default class LigoSnippet {
       };
     } catch (err) {
       throw new Error(`Unable to parse configuration: ${err}`);
+    }
+  };
+
+  private handleErrors = (error: string) => {
+    console.log(error);
+    this.showErrorContainer(true, error.toString());
+  };
+
+  private showErrorContainer = (show: boolean, msg?: string) => {
+    const errorContainer = document.getElementById(
+      `${config.watermark}-compile-error`
+    );
+    if (show) {
+      errorContainer.textContent = msg;
+      errorContainer.classList.add("active");
+      // highlights line number
+      const matchLineNumber = msg.match(/line ([0-9]+)/);
+      if (matchLineNumber) {
+        const lineNumber = document.getElementById(
+          `${config.watermark}-line-number-${matchLineNumber[1]}`
+        );
+        lineNumber.style.color = "#f76565";
+        lineNumber.style.fontWeight = "bold";
+        this.activeError = { status: true, msg, line: +matchLineNumber[1] };
+      } else {
+        this.activeError = { status: true, msg, line: 0 };
+      }
+    } else {
+      this.activeError = { status: false, msg: "", line: 0 };
+      errorContainer.classList.remove("active");
+      errorContainer.textContent = "";
+      // resets line numbers
+      [
+        ...document
+          .getElementById(`${config.watermark}-line-numbers`)
+          .getElementsByTagName("div")
+      ].forEach(lineNumber => {
+        lineNumber.style.color = "inherit";
+        lineNumber.style.fontWeight = "normal";
+      });
     }
   };
 }
