@@ -1,7 +1,9 @@
 import setupContainer from "./setupContainer";
 import config from "./config";
+// @ts-ignore
 import Prism from "./Prism/prism";
-import YAML from "./YAML/yaml.js";
+// @ts-ignore
+import YAML from "./YAML/yaml";
 import {
   cameligoCode,
   pascaligoCode,
@@ -83,18 +85,31 @@ export default class LigoSnippet {
       height: ""
     });
     this.activeError = { status: false, msg: "", line: 0 };
+    this.michelson = "";
     // adds ligo syntax support
     Prism.languages = this.addLigoFlavours(Prism.languages);
     setupContainer(this.containerId, containerClass);
     this.editorInputElement = document.getElementById(
       `${config.watermark}-editor-input`
     ) as HTMLTextAreaElement;
-    this.editorRendererElement = document.getElementById(
+
+    const editorRendererElement = document.getElementById(
       `${config.watermark}-editor`
     );
-    this.lineNumbersColumn = document.getElementById(
+    if (editorRendererElement) {
+      this.editorRendererElement = editorRendererElement;
+    } else {
+      throw new Error("No editor renderer element found");
+    }
+
+    const lineNumbersColumn = document.getElementById(
       `${config.watermark}-line-numbers`
     );
+    if (lineNumbersColumn) {
+      this.lineNumbersColumn = lineNumbersColumn;
+    } else {
+      throw new Error("No line numbers column found");
+    }
     // attaches events listener
     // textarea events
     this.editorInputElement.addEventListener("input", this.typeCode);
@@ -104,10 +119,10 @@ export default class LigoSnippet {
       button.addEventListener("click", this.changeCurrentFlavour);
     });
     document
-      .getElementById(`${config.watermark}-open-in-ide-button`)
+      .getElementById(`${config.watermark}-open-in-ide-button`)!
       .addEventListener("click", this.openInIde);
     document
-      .getElementById(`${config.watermark}-run-button`)
+      .getElementById(`${config.watermark}-run-button`)!
       .addEventListener("click", this.compileCode);
     // adds code into the textarea input
     this.editorInputElement.value = this.currentCode;
@@ -146,7 +161,7 @@ export default class LigoSnippet {
       button.classList.remove("selected");
     });
     document
-      .getElementById(`${config.watermark}-${flavour.toLowerCase()}-button`)
+      .getElementById(`${config.watermark}-${flavour.toLowerCase()}-button`)!
       .classList.add("selected");
   };
 
@@ -166,6 +181,8 @@ export default class LigoSnippet {
         const michelsonButton = document.getElementById(
           `${config.watermark}-michelson-button`
         );
+        if (!michelsonButton) throw "Unknow Michelson button element";
+
         michelsonButton.classList.remove("slide-in-right");
         michelsonButton.style.display = "none";
         this.michelson = "";
@@ -197,7 +214,7 @@ export default class LigoSnippet {
     }
   };
 
-  private getLanguageHighlight = language => {
+  private getLanguageHighlight = (language: LigoFlavour) => {
     switch (language) {
       case "cameligo":
         return Prism.languages.cameligo;
@@ -269,6 +286,8 @@ export default class LigoSnippet {
     this.showErrorContainer(false);
     const runButton = document.getElementById(`${config.watermark}-run-button`);
     try {
+      if (!runButton) throw "Unknow run button element";
+
       // adds loader
       const loader = document.createElement("div");
       loader.classList.add("lds-hourglass");
@@ -305,6 +324,8 @@ export default class LigoSnippet {
           const michelsonButton = document.getElementById(
             `${config.watermark}-michelson-button`
           );
+          if (!michelsonButton) throw "Michelson button not found";
+
           michelsonButton.classList.add("slide-in-right");
           michelsonButton.style.display = "inline-block";
           // triggers click on button
@@ -327,12 +348,14 @@ export default class LigoSnippet {
     } catch (error) {
       this.handleErrors(error);
     } finally {
-      runButton.innerHTML = "";
-      runButton.innerText = "Run";
+      if (runButton) {
+        runButton.innerHTML = "";
+        runButton.innerText = "Run";
+      }
     }
   };
 
-  private addLigoFlavours = prismLanguages => ({
+  private addLigoFlavours = (prismLanguages: any) => ({
     ...prismLanguages,
     pascaligo: {
       comment: [
@@ -347,7 +370,8 @@ export default class LigoSnippet {
       keyword: [
         {
           // Turbo Pascal
-          pattern: /(^|[^&])\b(?:absolute|array|asm|begin|case|const|constructor|destructor|do|downto|else|end|file|for|function|goto|if|implementation|inherited|inline|interface|label|nil|object|of|operator|packed|procedure|program|record|reintroduce|repeat|self|set|string|then|to|type|unit|until|uses|var|while|with)\b/i,
+          pattern:
+            /(^|[^&])\b(?:absolute|array|asm|begin|case|const|constructor|destructor|do|downto|else|end|file|for|function|goto|if|implementation|inherited|inline|interface|label|nil|object|of|operator|packed|procedure|program|record|reintroduce|repeat|self|set|string|then|to|type|unit|until|uses|var|while|with)\b/i,
           lookbehind: true
         },
         {
@@ -357,12 +381,14 @@ export default class LigoSnippet {
         },
         {
           // Object Pascal
-          pattern: /(^|[^&])\b(?:class|dispinterface|except|exports|finalization|finally|initialization|inline|library|on|out|packed|property|raise|resourcestring|threadvar|try)\b/i,
+          pattern:
+            /(^|[^&])\b(?:class|dispinterface|except|exports|finalization|finally|initialization|inline|library|on|out|packed|property|raise|resourcestring|threadvar|try)\b/i,
           lookbehind: true
         },
         {
           // Modifiers
-          pattern: /(^|[^&])\b(?:absolute|abstract|alias|assembler|bitpacked|break|cdecl|continue|cppdecl|cvar|default|deprecated|dynamic|enumerator|experimental|export|external|far|far16|forward|generic|helper|implements|index|interrupt|iochecks|local|message|name|near|nodefault|noreturn|nostackframe|oldfpccall|otherwise|overload|override|pascal|platform|private|protected|public|published|read|register|reintroduce|result|safecall|saveregisters|softfloat|specialize|static|stdcall|stored|strict|unaligned|unimplemented|varargs|virtual|write)\b/i,
+          pattern:
+            /(^|[^&])\b(?:absolute|abstract|alias|assembler|bitpacked|break|cdecl|continue|cppdecl|cvar|default|deprecated|dynamic|enumerator|experimental|export|external|far|far16|forward|generic|helper|implements|index|interrupt|iochecks|local|message|name|near|nodefault|noreturn|nostackframe|oldfpccall|otherwise|overload|override|pascal|platform|private|protected|public|published|read|register|reintroduce|result|safecall|saveregisters|softfloat|specialize|static|stdcall|stored|strict|unaligned|unimplemented|varargs|virtual|write)\b/i,
           lookbehind: true
         }
       ],
@@ -375,7 +401,8 @@ export default class LigoSnippet {
       operator: [
         /\.\.|\*\*|:=|<[<=>]?|>[>=]?|[+\-*\/]=?|[@^=]/i,
         {
-          pattern: /(^|[^&])\b(?:and|as|div|exclude|in|include|is|mod|not|or|shl|shr|xor)\b/,
+          pattern:
+            /(^|[^&])\b(?:and|as|div|exclude|in|include|is|mod|not|or|shl|shr|xor)\b/,
           lookbehind: true
         }
       ],
@@ -452,34 +479,46 @@ export default class LigoSnippet {
     const errorContainer = document.getElementById(
       `${config.watermark}-compile-error`
     );
-    if (show) {
-      errorContainer.textContent = msg;
-      errorContainer.classList.add("active");
-      // highlights line number
-      const matchLineNumber = msg.match(/line ([0-9]+)/);
-      if (matchLineNumber) {
-        const lineNumber = document.getElementById(
-          `${config.watermark}-line-number-${matchLineNumber[1]}`
-        );
-        lineNumber.style.color = "#f76565";
-        lineNumber.style.fontWeight = "bold";
-        this.activeError = { status: true, msg, line: +matchLineNumber[1] };
+    if (errorContainer) {
+      if (show && msg) {
+        errorContainer.textContent = msg;
+        errorContainer.classList.add("active");
+        // highlights line number
+        const matchLineNumber = msg!.match(/line ([0-9]+)/);
+        if (matchLineNumber) {
+          const lineNumber = document.getElementById(
+            `${config.watermark}-line-number-${matchLineNumber[1]}`
+          );
+          if (lineNumber) {
+            lineNumber.style.color = "#f76565";
+            lineNumber.style.fontWeight = "bold";
+            this.activeError = {
+              status: true,
+              msg,
+              line: +matchLineNumber[1]
+            };
+          } else {
+            console.error("Couldn't find line number container");
+          }
+        } else {
+          this.activeError = { status: true, msg, line: 0 };
+        }
       } else {
-        this.activeError = { status: true, msg, line: 0 };
+        this.activeError = { status: false, msg: "", line: 0 };
+        errorContainer.classList.remove("active");
+        errorContainer.textContent = "";
+        // resets line numbers
+        [
+          ...document
+            .getElementById(`${config.watermark}-line-numbers`)!
+            .getElementsByTagName("div")
+        ].forEach(lineNumber => {
+          lineNumber.style.color = "inherit";
+          lineNumber.style.fontWeight = "normal";
+        });
       }
     } else {
-      this.activeError = { status: false, msg: "", line: 0 };
-      errorContainer.classList.remove("active");
-      errorContainer.textContent = "";
-      // resets line numbers
-      [
-        ...document
-          .getElementById(`${config.watermark}-line-numbers`)
-          .getElementsByTagName("div")
-      ].forEach(lineNumber => {
-        lineNumber.style.color = "inherit";
-        lineNumber.style.fontWeight = "normal";
-      });
+      console.error("Error container is undefined");
     }
   };
 }

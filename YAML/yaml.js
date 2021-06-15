@@ -1,14 +1,13 @@
 /*! js-yaml 4.1.0 https://github.com/nodeca/js-yaml @license MIT */
-!(function (e, t) {
+const YAML = !(function (e, t) {
   "object" == typeof exports && "undefined" != typeof module
     ? t(exports)
     : "function" == typeof define && define.amd
     ? define(["exports"], t)
     : t(
         ((e =
-          "undefined" != typeof globalThis
-            ? globalThis
-            : e || self).jsyaml = {})
+          "undefined" != typeof globalThis ? globalThis : e || self).jsyaml =
+          {})
       );
 })(this, function (e) {
   "use strict";
@@ -747,11 +746,13 @@
     }),
     K = j.extend({ implicit: [F, E], explicit: [L, U, Y, B] }),
     P = Object.prototype.hasOwnProperty,
-    W = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x84\x86-\x9F\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]/,
+    W =
+      /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x84\x86-\x9F\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]/,
     H = /[\x85\u2028\u2029]/,
     $ = /[,\[\]\{\}]/,
     G = /^(?:!|!!|![a-z\-]+!)$/i,
-    V = /^(?:!|[^,\[\]\{\}])(?:%[0-9a-f]{2}|[0-9a-z\-#;\/\?:@&=\+\$,_\.!~\*'\(\)\[\]])*$/i;
+    V =
+      /^(?:!|[^,\[\]\{\}])(?:%[0-9a-f]{2}|[0-9a-z\-#;\/\?:@&=\+\$,_\.!~\*'\(\)\[\]])*$/i;
   function Z(e) {
     return Object.prototype.toString.call(e);
   }

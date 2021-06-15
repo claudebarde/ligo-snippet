@@ -1,0 +1,25 @@
+{
+  "name": "ligo-snippet",
+  "version": "2.0.0",
+  "description": "Ligo code snippet",
+  "main": "LigoSnippet.ts",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublish": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/claudebarde/ligo-snippet.git"
+  },
+  "keywords": [
+    "Ligo",
+    "Tezos"
+  ],
+  "author": "Claude Barde",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/claudebarde/ligo-snippet/issues"
+  },
+  "homepage": "https://github.com/claudebarde/ligo-snippet#readme"
+}
