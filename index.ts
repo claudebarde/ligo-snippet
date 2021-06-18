@@ -142,6 +142,7 @@ export default class LigoSnippet {
       // user switches from Michelson to Ligo
       // sets the new flavour
       this.currentFlavour = flavour;
+      this.editorParams.editor.language = flavour;
       // updates code
       this.editorInputElement.value = this.currentCode;
       const editorInput = document.createEvent("Event");
@@ -156,6 +157,10 @@ export default class LigoSnippet {
       const editorInput = document.createEvent("Event");
       editorInput.initEvent("input", true, true);
       this.editorInputElement.dispatchEvent(editorInput);
+    } else {
+      // sets the new flavour
+      this.currentFlavour = flavour;
+      this.editorParams.editor.language = flavour;
     }
     [...document.getElementsByClassName("flavour-button")].forEach(button => {
       button.classList.remove("selected");
@@ -217,15 +222,15 @@ export default class LigoSnippet {
   private getLanguageHighlight = (language: LigoFlavour) => {
     switch (language) {
       case "cameligo":
-        return Prism.languages.cameligo;
+        return (Prism.languages as any).cameligo;
       case "reasonligo":
-        return Prism.languages.reasonligo;
+        return (Prism.languages as any).reasonligo;
       case "pascaligo":
-        return Prism.languages.pascaligo;
+        return (Prism.languages as any).pascaligo;
       case "michelson":
-        return Prism.languages.michelson;
+        return (Prism.languages as any).michelson;
       default:
-        return Prism.languages.clike;
+        return (Prism.languages as any).clike;
     }
   };
 
@@ -298,6 +303,7 @@ export default class LigoSnippet {
       const entrypoint = "main",
         syntax = this.editorParams.editor.language,
         code = this.editorParams.editor.code;
+      console.log(syntax);
       const response = await fetch(
         "https://ide-staging.ligolang.org/api/compile-contract",
         {

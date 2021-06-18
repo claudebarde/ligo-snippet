@@ -1,9 +1,15 @@
 {
   "name": "ligo-snippet",
-  "version": "1.0.0",
+  "version": "1.3.0",
   "description": "Ligo code snippet",
-  "main": "LigoSnippet.ts",
+  "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "Prism",
+    "styles",
+    "YAML"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepublish": "tsc"

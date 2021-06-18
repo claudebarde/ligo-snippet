@@ -1535,7 +1535,7 @@ const YAML = !(function (e, t) {
                 );
               })(e, d)
                 ? (y = !0)
-                : !(function (e) {
+                : !((e) => {
                     var t, n, i;
                     if (42 !== (i = e.input.charCodeAt(e.position))) return !1;
                     for (
